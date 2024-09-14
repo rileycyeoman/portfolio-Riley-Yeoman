@@ -453,3 +453,11 @@ footer p{
     text-align: center;
     
 }
+
+#container3D canvas{
+  width: 100vw !important;
+  height : 100vh !important;
+  position  : absolute;
+  top: 0;
+  left: 0;
+}
