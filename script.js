@@ -38,8 +38,8 @@ function shuffleArray(arr) {
 }
 function getPoints() {
     const arr = [];
-    const numCols = 10;
-    const numRows = 10;
+    const numCols = 15;
+    const numRows = 15;
     const startPos = {
       x: 0,
       y: 2,
@@ -50,7 +50,7 @@ function getPoints() {
     for (let i = 0; i < numCols; i += 1) {
       for (let j = 0; j < numRows; j += 1) {
         x = startPos.x + i * spacing;
-        y = THREE.MathUtils.randFloatSpread(spacing * 7);
+        y = THREE.MathUtils.randFloatSpread(spacing * 8);
         z = startPos.z + j * spacing;
         arr.push({ x, y, z });
       }
@@ -61,32 +61,34 @@ function createThingFrom(points) {
     const geo = new THREE.BufferGeometry();
     const vertexPositions = [];
     const vertexColors = [];
-    const cMult = 0.3;
+    const cMult = 0.5;
     points.forEach((p) => {
-      const { x, y, z } = p;
-      vertexPositions.push(x, y, z);
-      vertexColors.push(x * cMult, y * cMult, z * cMult);
+        const { x, y, z } = p;
+        vertexPositions.push(x, y, z);
+        vertexColors.push(x * cMult, y * cMult, z * cMult);
     });
-  
+
     geo.setAttribute( "position", new THREE.Float32BufferAttribute(vertexPositions, 3));
     geo.setAttribute("color", new THREE.Float32BufferAttribute(vertexColors, 3));
     const mat = new THREE.MeshBasicMaterial({
-      vertexColors: true,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.5,
+        vertexColors: true,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.5,
     });
     const mesh = new THREE.Mesh(geo, mat);
     function update () {
-      mesh.rotation.y += 0.001;
-      mesh.rotation.x += 0.0005;
+        // mesh.rotation.y += 0.003;
+        mesh.rotation.x += 0.001;
+        mesh.rotation.z += 0.001;
     }
     return { mesh, update };
-  }
-  
-  const points = getPoints();
-  const thing = createThingFrom(points);
-  scene.add(thing.mesh);
+}
+
+const points = getPoints();
+const thing = createThingFrom(points);
+scene.add(thing.mesh);
+thing.mesh.position.set(0,2,-3);
 thing.mesh.scale.set(0.4,0.4,0.4);
 
 
