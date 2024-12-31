@@ -7,10 +7,13 @@ function toggleMenu(){
 
 //Three JS Section
 // Scene setup
+const w = window.innerWidth
+const h = window.innerHeight
+
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+var camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 1000);
 var renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setSize(w, h);
 document.body.appendChild(renderer.domElement);
 scene.background = new THREE.Color('#121212');
 // Add a simple ambient light
@@ -19,71 +22,124 @@ scene.add(light);
 
 // Load the 3D model
 var loader = new THREE.GLTFLoader();
-loader.load('./models/robot_arm/scene.gltf', function(gltf) {
-    var model = gltf.scene;
-    scene.add(model);
-    model.position.set(7, -1, -1);
-    model.scale.set(1.2,1.2,1.2);
-    model.traverse(function (child) {
-        if (child.isMesh) {
-            console.log(child.name); 
-    }});
-    // base = model.getObjectByName('Object_18');
+
+
+function shuffleArray(arr) {
+    let curIndex = arr.length;
+    let randomIndex, temp;
+    while (curIndex !== 0) {
+      randomIndex = Math.floor(Math.random() * curIndex);
+      curIndex -= 1;
+      temp = arr[curIndex];
+      arr[curIndex] = arr[randomIndex];
+      arr[randomIndex] = temp;
+    }
+    return arr;
+}
+function getPoints() {
+    const arr = [];
+    const numCols = 10;
+    const numRows = 10;
+    const startPos = {
+      x: 0,
+      y: 2,
+      z: -8.5,
+    };
+    const spacing = 1.5;
+    let x, y, z;
+    for (let i = 0; i < numCols; i += 1) {
+      for (let j = 0; j < numRows; j += 1) {
+        x = startPos.x + i * spacing;
+        y = THREE.MathUtils.randFloatSpread(spacing * 7);
+        z = startPos.z + j * spacing;
+        arr.push({ x, y, z });
+      }
+    }
+    return shuffleArray(arr);
+}
+function createThingFrom(points) {
+    const geo = new THREE.BufferGeometry();
+    const vertexPositions = [];
+    const vertexColors = [];
+    const cMult = 0.3;
+    points.forEach((p) => {
+      const { x, y, z } = p;
+      vertexPositions.push(x, y, z);
+      vertexColors.push(x * cMult, y * cMult, z * cMult);
+    });
+  
+    geo.setAttribute( "position", new THREE.Float32BufferAttribute(vertexPositions, 3));
+    geo.setAttribute("color", new THREE.Float32BufferAttribute(vertexColors, 3));
+    const mat = new THREE.MeshBasicMaterial({
+      vertexColors: true,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.5,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    function update () {
+      mesh.rotation.y += 0.001;
+      mesh.rotation.x += 0.0005;
+    }
+    return { mesh, update };
+  }
+  
+  const points = getPoints();
+  const thing = createThingFrom(points);
+  scene.add(thing.mesh);
+thing.mesh.scale.set(0.4,0.4,0.4);
+
+
+
+// Plane geometry (acts as a floor or background)
+var planeGeometry = new THREE.PlaneGeometry(10, 10);
+var planeMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+        color1: { value: new THREE.Color(0x444444) }, // Dark gray at the bottom
+        color2: { value: new THREE.Color(0x222222) }  // Darker gray at the top
+    },
+    vertexShader: `
+        varying vec2 vUv;
+        void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    `,
+    fragmentShader: `
+        uniform vec3 color1;
+        uniform vec3 color2;
+        varying vec2 vUv;
+        void main() {
+            // Create a vertical gradient by mixing two colors based on the y-coordinate of the UV
+            gl_FragColor = vec4(mix(color1, color2, vUv.y), 1.0);
+        }
+    `,
+    side: THREE.DoubleSide // Render both sides of the plane
 });
 
-
-
-
-// Solid material
-var geometry = new THREE.IcosahedronGeometry(1); // Radius of 1
-var solidMaterial = new THREE.MeshPhongMaterial({ color: 0x00FFFF, flatShading: true }); // Solid green material
-var icosahedronSolid = new THREE.Mesh(geometry, solidMaterial);
-scene.add(icosahedronSolid);
-
-
-
-// Wireframe material
-var wireframeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true }); // Wireframe (white)
-var icosahedronWireframe = new THREE.Mesh(geometry, wireframeMaterial);
-scene.add(icosahedronWireframe);
-
-
-icosahedronSolid.position.set(-6, -1, 0);
-icosahedronWireframe.position.set(-6, -1, 0);
-
-
-var torusGeometry = new THREE.TorusGeometry(1, 0.3, 16, 100); // Large torus
-var torusMaterial = new THREE.MeshPhongMaterial({ color: 0xff6347 }); // Red torus
-var torus = new THREE.Mesh(torusGeometry, torusMaterial);
-scene.add(torus);
-torus.position.set(-6, 1, 0); // Position it to the left of the icosahedron
-
+var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+plane.rotation.x = -Math.PI / 2; // Lay it flat as the "floor"
+plane.position.set(0, -1.5, 0); // Lower it slightly below the objects
+scene.add(plane);
 
 var time = 0;
-camera.position.set(0,1,5);
+camera.position.set(0, 1, 5);
 
-// Render loop
+// Target position for inverse kinematic
+// Update rotation in the render loop
 var animate = function() {
     requestAnimationFrame(animate);
 
-    // Rotate both the solid and wireframe icosahedron
-    icosahedronSolid.rotation.x += 0.001;
-    icosahedronSolid.rotation.y += 0.001;
 
-    icosahedronWireframe.rotation.x += 0.001;
-    icosahedronWireframe.rotation.y += 0.001;
+    thing.update();
 
-    time += 0.05;
-    torus.position.x = Math.sin(time) * 2;  // Move along x-axis
-    torus.position.y = Math.sin(time * 0.5) * 1;  // Wave up and down
-    torus.rotation.z += 0.05;  // Rotate the torus around its z-axis
+    time += 0.02; // Slow down time increment for less rapid movement
 
-
-    // base.rotation.y += 0.01;
     renderer.render(scene, camera);
 };
 
 animate();
+
 
 // Resize canvas when window is resized
 window.addEventListener('resize', () => {
