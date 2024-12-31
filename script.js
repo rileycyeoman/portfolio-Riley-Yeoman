@@ -65,7 +65,13 @@ function createThingFrom(points) {
     points.forEach((p) => {
         const { x, y, z } = p;
         vertexPositions.push(x, y, z);
-        vertexColors.push(x * cMult, y * cMult, z * cMult);
+    
+        // Calculate gradient values for a cyan color (R: 0, G: varies, B: varies)
+        const green = Math.abs(y) * 0.1; // Adjust the multiplier to control intensity
+        const blue = Math.abs(z) * 0.4;  // Adjust the multiplier to control intensity
+        const red = 0; // Cyan has no red component
+    
+        vertexColors.push(red, green, blue);
     });
 
     geo.setAttribute( "position", new THREE.Float32BufferAttribute(vertexPositions, 3));
@@ -78,9 +84,9 @@ function createThingFrom(points) {
     });
     const mesh = new THREE.Mesh(geo, mat);
     function update () {
-        // mesh.rotation.y += 0.003;
+        // mesh.rotation.y += 0.001;
         mesh.rotation.x += 0.001;
-        mesh.rotation.z += 0.001;
+        // mesh.rotation.z += 0.001;
     }
     return { mesh, update };
 }
@@ -88,11 +94,24 @@ function createThingFrom(points) {
 const points = getPoints();
 const thing = createThingFrom(points);
 scene.add(thing.mesh);
-thing.mesh.position.set(0,2,-3);
-thing.mesh.scale.set(0.4,0.4,0.4);
+thing.mesh.position.set(4,2,-2);
+thing.mesh.scale.set(0.2,0.2,0.2);
 
 
-
+const texts = [
+    "Now with more Javascript!",
+    "A Wolf in Developer's Clothing!",
+    "Made in Minnesota!",
+    "Robots? They make those now?!",
+    "90% Bug Free!",
+    "I'm Always A Call (or 2 plus voicemail) Away!",
+  ];
+  
+  // Select a random text
+  const randomText = texts[Math.floor(Math.random() * texts.length)];
+  
+  // Set the random text to the rotated text element
+  document.querySelector(".rotated-text").textContent = randomText;
 // Plane geometry (acts as a floor or background)
 var planeGeometry = new THREE.PlaneGeometry(10, 10);
 var planeMaterial = new THREE.ShaderMaterial({
