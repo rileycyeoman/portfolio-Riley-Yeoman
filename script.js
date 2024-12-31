@@ -101,10 +101,13 @@ thing.mesh.scale.set(0.2,0.2,0.2);
 const texts = [
     "Now with more Javascript!",
     "A Wolf in Developer's Clothing!",
-    "Made in Minnesota!",
+    "Based in Minnesota!",
     "Robots? They make those now?!",
     "90% Bug Free!",
-    "I'm Always A Call (or 2 plus voicemail) Away!",
+    "I'm Always A Call (or 2) Away!",
+    "Now in 2D!",
+    "No, It's A Hootenanny!",
+    "Who You Calling A Pinhead?",
   ];
   
   // Select a random text
